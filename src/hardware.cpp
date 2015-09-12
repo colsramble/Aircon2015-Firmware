@@ -2,10 +2,15 @@
 #include "globals.h"
 #include "hardware.h"
 
-// Status tabl
+// Status tables
 int zonePosition[]    = { 0, 0, 0, 0, 0, 0 };
 int zoneCalibration[] = { 0, ZONE_MAX_RUN_TIME, ZONE_MAX_RUN_TIME, ZONE_MAX_RUN_TIME, ZONE_MAX_RUN_TIME, ZONE_MAX_RUN_TIME } ;
 int zoneTemp[]        = { 0, 0, 0, 0, 0, 0 };
+int analogChannels[]  = { 0, 0, 0, 0, 0, 0 };
+
+// Refresh settings and global "busy" flag
+int refreshCounter = REFRESH_SECONDS;  
+int busy = 0;
 
 void calibrate() {
   /* 
@@ -19,8 +24,12 @@ void calibrate() {
      select zone 0
   */
   for(int z=ZONE_MIN; z<=ZONE_MAX; z++) {
+    // get zone temp
+    readZoneTemp(z);
+    
     runZone(z, 100, ZONE_CLOSE);   // Close 100%
     delay(1000);
+    
     runZone(z, 100, ZONE_OPEN);    // Open 100% (gets full articulation time)
     // Update calibration table
     zoneCalibration[z] = zonePosition[z];    
@@ -110,16 +119,23 @@ void runZone(int z, int percent, int mode) {
 }
 
 int readZoneTemp(int zone) {
-  if (zone < ZONE_MIN || zone > ZONE_MAX) {
+  if ( zone < ZONE_MIN || zone > ZONE_MAX ) {
     return 0;
   }
   
   selectZone(zone);
   
-  // read the temp TODO: Average a number of samples?
-  delay(20);  // settling time?
+  // small settle time
+  delay(10);  // settling time?
   
-  zoneTemp[zone] = analogRead(PIN_ZONE_TEMP);
+  // average a number of samples
+  unsigned int temp = 0;
+  for (int i=0; i<64; i++) {
+    temp += analogRead(PIN_ZONE_TEMP);
+  } 
+  temp = temp / 64;
+  
+  zoneTemp[zone] = (int) temp;
   
   return zoneTemp[zone];
 }

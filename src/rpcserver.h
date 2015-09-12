@@ -39,7 +39,7 @@ void hdlClose(EthernetClient);
 void hdlReset(EthernetClient);
 
 void parseBuffer();
-void sendResponse(EthernetClient, int, int, int, int);
+void sendResponse(EthernetClient, int);
 int char2int(char);
 
 #endif

@@ -3,6 +3,7 @@
 #include "globals.h"
 #include "rpcserver.h"
 #include "hardware.h"
+#include "interrupt.h"
 
 // Enter a MAC address and IP address for your controller below.
 // The IP address will be dependent on your local network:
@@ -15,6 +16,7 @@ IPAddress ip(192,168,1,177);
 // (port 80 is default for HTTP):
 EthernetServer server(80);
 
+
 void setup() {
   memset(rxLine,0,sizeof(rxLine));
   rxLinePos = 0;
@@ -24,9 +26,15 @@ void setup() {
   // start the Ethernet connection and the server:
   Ethernet.begin(mac,ip);
   server.begin();
+  
+  // Setup interrupts
+  interruptInit();  
 }
 
-
+ISR(TIMER1_COMPA_vect) { 
+  // Every REFRESH_SECONDS seconds we'll refresh the local cache
+  interruptHandleTimer();
+}
 
 void loop() {
   // listen for incoming clients
@@ -56,6 +64,7 @@ void loop() {
         // character) and the line is blank, the http request has ended,
         // so you can send a reply
         if (c == '\n' && currentLineIsBlank) {
+          busy = 1;
           switch(cmd) {
             case CMD_STATUS:
               hdlStatus(client);
@@ -70,10 +79,11 @@ void loop() {
               hdlReset(client);
               break;
             default: 
-              sendResponse(client, STATUS_NOT_FOUND, 0, 0, 0);
+              sendResponse(client, STATUS_NOT_FOUND);
               break;
           }
           cmd = CMD_NONE;
+          busy = 0;
 
           break;
         }

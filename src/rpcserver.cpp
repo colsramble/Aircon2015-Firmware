@@ -22,23 +22,13 @@ byte method;   // "GET" | "POST"
 byte cmd;      // "stat" | "open" | "clse" | "rset"
 
 void hdlStatus(EthernetClient client) {
-  // param1:  zone select   
+  // param1:  zone to update    
   // param2:  unused
   
-  selectZone(param1);
-  
-  int zoneTemp = readZoneTemp();
+  // read zone will select it
+  readZoneTemp(param1);
 
-  // done - send response
-  //float posPercent = (float) zonePosition[param1] / (float) zoneCalibration[param1];
-  //posPercent = round( posPercent * 100.0 );
-  unsigned long posPercent = (unsigned long) zonePosition[param1] * (unsigned long) 100;
-  posPercent = posPercent / (unsigned long) zoneCalibration[param1];
-  // rounding
-  //if ((posPercent - (int)posPercent) > 0.5) {
-  //  posPercent = posPercent + 0.5;
-  //}
-  sendResponse(client, STATUS_OK, param1, zoneTemp, (int) posPercent);
+  sendResponse(client, STATUS_OK);
 
   // unselect zone
   selectZone(0);
@@ -79,7 +69,7 @@ void hdlReset(EthernetClient client) {
   hardwareInit();
   
   // done - send response
-  sendResponse(client, STATUS_OK, 0, 0, 0);
+  sendResponse(client, STATUS_OK);
 }
 
 void parseParams(char* paramStr) {
@@ -143,7 +133,7 @@ void parseBuffer() {
   rxLinePos = 0;
 }
 
-void sendResponse(EthernetClient client, int status, int p1, int p2, int p3) {
+void sendResponse(EthernetClient client, int status) {
   delay(1000);  // TOD: sometimes short response times fail, so wait a bit 
   
   // Header
@@ -164,44 +154,44 @@ void sendResponse(EthernetClient client, int status, int p1, int p2, int p3) {
   //status
   client.print("\"status\":");
   client.print(status);
-  client.print(",");
   
   //cmd
+  client.print(",");
   client.print("\"cmd\":");
   client.print(cmd);
-  client.print(",");
-  
-  //param1
-  client.print("\"p1\":");
-  client.print(p1);
-  client.print(",");
-  
-  //param2
-  client.print("\"p2\":");
-  client.print(p2);
-  client.print(",");
-  
-  //param3
-  client.print("\"p3\":");
-  client.print(p3);
 
-  //positions
+  //payload
   client.print(",");
-  client.print("\"stat\": [ ");
+  client.print("\"data\": { \"zones\": [ ");
   for (int i=ZONE_MIN; i<=ZONE_MAX; i++) {
-    client.print("{\"zone\": ");
+    client.print("{\"id\": ");
     client.print(i);
+    client.print(", \"temp\": ");
+    client.print(zoneTemp[i]);
     client.print(", \"pos\": ");
-    client.print(zoneCalibration[i]);
-    client.print(", \"cal\": ");
     client.print(zonePosition[i]);
+    client.print(", \"cal\": ");
+    client.print(zoneCalibration[i]);
     client.print("}");
     
     if (i<ZONE_MAX) {
       client.print(", ");
     }
   }
-  client.print(" ]");
+  
+  client.print(" ], \"analog\": [ ");
+  for (int i=PIN_ANALOG_MIN; i<=PIN_ANALOG_MAX; i++) {
+    client.print("{\"pin\": ");
+    client.print(i);
+    client.print(", \"val\": ");
+    client.print(analogChannels[i]);
+    client.print("}");
+  
+    if (i<PIN_ANALOG_MAX) {
+      client.print(", ");
+    }
+  }
+  client.print(" ] }");
   
   // close body
   client.println("});");  

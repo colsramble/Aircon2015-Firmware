@@ -5,6 +5,9 @@
 #define PIN_ZONE_TEMP   0
 #define PIN_100_DETECT  8
 
+#define PIN_ANALOG_MIN  1
+#define PIN_ANALOG_MAX  5
+
 // Constants
 #define ZONE_OPEN          0
 #define ZONE_CLOSE         1
