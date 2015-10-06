@@ -140,6 +140,28 @@ int readZoneTemp(int zone) {
   return zoneTemp[zone];
 }
 
+int readAnalogChannel(int pin) {
+  if ( pin < PIN_ANALOG_MIN || pin > PIN_ANALOG_MAX ) {
+    return 0;
+  }
+  
+  // small settle time
+  analogRead(pin);
+  delay(5);  // settling time?
+  
+  // average a number of samples
+  unsigned int temp = 0;
+  for (int i=0; i<64; i++) {
+    temp += analogRead(pin);
+  } 
+  temp = temp / 64;
+  
+  analogChannels[pin] = (int) temp;
+  
+  return analogChannels[pin];
+}
+
+
 void hardwareInit() {
   /*
      set up I/O
@@ -192,4 +214,17 @@ void selectZone(int zone) {
   delay(1);
 }
 
-
+void refreshStatus() {
+  // Refresh zone data
+  for(int z=ZONE_MIN; z<=ZONE_MAX; z++) {
+    // get zone temp
+    readZoneTemp(z);    
+  }
+  selectZone(0);
+    
+  // Refresh analog data
+  for (int i=PIN_ANALOG_MIN; i<=PIN_ANALOG_MAX; i++) {
+    // analogChannels[i] = analogRead(i);
+    readAnalogChannel(i);
+  }
+}

@@ -27,6 +27,8 @@ void hardwareInit();
 void calibrate();
 void runZone(int, int, int);
 int readZoneTemp(int);
+int readAnalogChannel(int);
 void selectZone(int);
+void refreshStatus();
 
 #endif

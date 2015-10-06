@@ -26,14 +26,16 @@ void hdlStatus(EthernetClient client) {
   // param2:  unused
   
   // read zone will select it
-  readZoneTemp(param1);
+  //readZoneTemp(param1);
+  
+  // Just force a refresh of current status
+  refreshStatus();
 
   sendResponse(client, STATUS_OK);
 
   // unselect zone
   selectZone(0);
 }
-
 
 void hdlOpen(EthernetClient client) {
   // param1:  zone select   

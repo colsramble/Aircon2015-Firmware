@@ -21,21 +21,11 @@ void interruptInit() {
 }
 
 void interruptHandleTimer() {
- // only do something if not busy and timer has expired 
+  // only do something if not busy and timer has expired 
   if (busy == 0 && refreshCounter-- < 0) { 
+    refreshStatus( );
     
-    // Refresh zone data
-    for(int z=ZONE_MIN; z<=ZONE_MAX; z++) {
-      // get zone temp
-      zoneTemp[z] = readZoneTemp(z);    
-    }
-    selectZone(0);
-    
-    // Refresh analog data
-    for (int i=PIN_ANALOG_MIN; i<=PIN_ANALOG_MAX; i++) {
-      analogChannels[i] = analogRead(i);
-    }
-    
+    // reset counter  
     refreshCounter = REFRESH_SECONDS;
   }
 }
