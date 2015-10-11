@@ -147,12 +147,12 @@ int readAnalogChannel(int pin) {
   
   // small settle time
   analogRead(pin);
-  delay(5);  // settling time?
   
-  // average a number of samples
+  // average a number of samples over typical noise frequency of 50Hz, T=20mS ~  64 * (100us + 200)
   unsigned int temp = 0;
   for (int i=0; i<64; i++) {
     temp += analogRead(pin);
+    delayMicroseconds(200);
   } 
   temp = temp / 64;
   
